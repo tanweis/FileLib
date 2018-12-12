@@ -1,0 +1,76 @@
+buildscript {
+    ext.androidPluginVersion = '3.2.1'
+    ext.kotlinVersion = '1.2.71'
+    ext.supportLibraryVersion = '27.1.0'
+    ext.lifecycle="1.1.1"
+    ext.retrofit="2.4.0"
+
+    repositories {
+        jcenter()
+        google()
+    }
+
+    dependencies {
+        // See changelog: http://developer.android.com/tools/revisions/gradle-plugin.html.
+        classpath "com.android.tools.build:gradle:$androidPluginVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+
+group 'com.tan.fileLib'
+version '1.0'
+
+uploadArchives{
+    repositories {
+        mavenDeployer{
+            repository(url:uri("/Users/tan/Documents/maven/repo"))
+        }
+    }
+}
+
+android {
+//    compileSdkVersion 28
+    compileSdkVersion 27
+//    buildToolsVersion build_versions.build_tools
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
+//    implementation deps.support.app_compat
+
+//    implementation deps.lifecycle.runtime
+//    implementation deps.lifecycle.extensions
+//    implementation deps.lifecycle.java8
+    implementation "android.arch.lifecycle:runtime:$lifecycle"
+    implementation "android.arch.lifecycle:extensions:$lifecycle"
+    implementation "android.arch.lifecycle:common-java8:$lifecycle"
+
+//    implementation deps.retrofit.runtime
+//    implementation deps.retrofit.gson
+//    implementation deps.retrofit.rx_adapter
+    implementation "com.squareup.retrofit2:retrofit:$retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit"
+}
