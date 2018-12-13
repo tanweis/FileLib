@@ -19,14 +19,51 @@ buildscript {
 
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-group 'com.tan.fileLib'
-version '1.0'
+group 'com.tan'
+ext.artifactIdcus='fileLib'
+version '1.10'
 
-uploadArchives{
+//uploadArchives{
+//    repositories {
+//        mavenDeployer{
+//            repository(url:uri("/Users/tan/Documents/maven/repo"))
+//        }
+//    }
+//}
+
+//maven-publish
+task sourceJar(type:Jar){
+    from android.sourceSets.main.java.srcDirs
+    classifier "sources"
+}
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId group
+            artifactId artifactIdcus
+            version version
+            artifact(sourceJar)
+            artifact("$buildDir/outputs/aar/filelib-release.aar")
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.findByName("implementation").allDependencies.each {
+                    if(it.group != null && (it.name != null || "unspecified".equals(it.name)) && it.version != null)
+                    {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
     repositories {
-        mavenDeployer{
-            repository(url:uri("/Users/tan/Documents/maven/repo"))
+        maven {
+            url "/Users/tan/Documents/maven/repo"
         }
     }
 }
@@ -55,6 +92,7 @@ android {
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.12'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
