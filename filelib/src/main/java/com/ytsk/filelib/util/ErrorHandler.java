@@ -33,6 +33,7 @@ public class ErrorHandler {
     //network error 连接失败
     private static final int NETWORK_ERROR = 1002;
     private static final int SSL_ERROR = 1003;
+    public static final int NETWORK_UNCONNECT_ERROR = 1005;
     private static final int UNKNOWN = 1000;
 
     public static final int URL_EXCEPTION=1100;
@@ -84,7 +85,7 @@ public class ErrorHandler {
             return ex;
         } else if (e instanceof NoNetworkException){
             ex= new ApiException(e);
-            ex.code= NETWORK_ERROR;
+            ex.code= NETWORK_UNCONNECT_ERROR;
             ex.msg="网络未连接";
             return ex;
         }else if (e instanceof ApiException) {
