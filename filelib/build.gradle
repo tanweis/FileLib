@@ -1,6 +1,6 @@
 buildscript {
-    ext.androidPluginVersion = '3.2.1'
-    ext.kotlinVersion = '1.2.71'
+    ext.androidPluginVersion = '3.5.3'
+    ext.kotlinVersion = '1.3.31'
     ext.supportLibraryVersion = '27.1.0'
     ext.lifecycle="1.1.1"
     ext.retrofit="2.4.0"
@@ -20,10 +20,11 @@ buildscript {
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.novoda.bintray-release'
 
 group 'com.tan'
 ext.artifactIdcus='fileLib'
-version '1.10'
+version '1.3'
 
 //uploadArchives{
 //    repositories {
@@ -33,11 +34,25 @@ version '1.10'
 //    }
 //}
 
+
+publish {
+    userOrg = 'tanweis'
+    repoName='tlib'
+    groupId = group
+    artifactId = artifactIdcus
+    publishVersion = version
+    desc = 'file lib'
+//    website = 'https://github.com/novoda/bintray-release'
+}
+
 //maven-publish
 task sourceJar(type:Jar){
     from android.sourceSets.main.java.srcDirs
     classifier "sources"
 }
+
+
+
 publishing {
     publications {
         bar(MavenPublication) {
@@ -88,6 +103,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    lintOptions {
+        abortOnError false
+    }
+
 
 }
 

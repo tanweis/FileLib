@@ -3,11 +3,17 @@ package com.ytsk.filelib.download;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.util.Pair;
 
 import com.ytsk.filelib.util.ApiException;
 import com.ytsk.filelib.util.ErrorHandler;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,7 +25,7 @@ import okio.Okio;
 
 public class DownLoad extends Thread {
 
-    private String TAG=getClass().getSimpleName();
+    private String TAG = getClass().getSimpleName();
 
     public static final int FINISH = 1;
     public static final int PROGRESS = 2;
@@ -41,6 +47,12 @@ public class DownLoad extends Thread {
         mOkHttpClient = new OkHttpClient.Builder().build();
     }
 
+    private List<Pair<String, String>> headers = new ArrayList<>();
+
+    public void addHeader(String key, String value) {
+        headers.add(Pair.create(key, value));
+    }
+
     public void setUrl(String url) {
         this.url = url;
     }
@@ -54,8 +66,26 @@ public class DownLoad extends Thread {
         super.run();
         try {
             isRunning = true;
-            Request request = new Request.Builder().url(url).build();
+            Request.Builder builder = new Request.Builder().url(url);
+            for (Pair<String, String> header : headers) {
+                builder.addHeader(header.first, header.second);
+            }
+            Request request = builder.build();
             Response response = mOkHttpClient.newCall(request).execute();
+            if (!isResponseFile(response)) {
+                ResponseBody body = response.body();
+                if (body == null) throw new ApiException(801, "body是空");
+                try {
+                    JSONObject json = new JSONObject(body.string());
+                    int code = json.getInt("code");
+                    String msg = json.getString("msg");
+                    throw new ApiException(code, msg);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                throw new ApiException(800, "不是文件,返回是:" + body.string());
+            }
+
             ResponseBody body;
             body = response.body();
             long contentLength = body.contentLength();
@@ -77,12 +107,18 @@ public class DownLoad extends Thread {
             sink.close();
             sendMsg(FINISH, -1, null);
         } catch (Exception e) {
-            Log.e(TAG,e.getMessage());
-            ApiException ext= ErrorHandler.handleException(e);
-            sendMsg(ERROR,-1,ext.msg);
+            Log.e(TAG, e.getMessage());
+            ApiException ext = ErrorHandler.handleException(e);
+            sendMsg(ERROR, -1, ext.msg);
         } finally {
             isRunning = false;
         }
+    }
+
+    public boolean isResponseFile(Response response) {
+        if (response == null) return false;
+        String contype=response.header("Content-Type");
+        return response.header("Content-Disposition") != null||(contype!=null&&contype.equalsIgnoreCase("application/octet-stream"));
     }
 
     public boolean isRunning() {
@@ -100,7 +136,7 @@ public class DownLoad extends Thread {
                 break;
             case PROGRESS:
                 message.obj = progress;
-                if (progress != curPro&&progress%10==0)
+                if (progress != curPro && progress % 10 == 0)
                     mHandler.sendMessage(message);
                 curPro = progress;
                 break;
